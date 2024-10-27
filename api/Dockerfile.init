@@ -1,0 +1,17 @@
+# Utilise une image Python comme base
+FROM python:3.10
+
+# Définir le répertoire de travail dans le conteneur
+WORKDIR /initialisation
+
+# Copier les fichiers nécessaires
+COPY requirements_init.txt ./
+COPY initialize.py ./
+COPY data.csv ./
+COPY ./dto ./dto  
+
+# Installer les dépendances
+RUN pip install --no-cache-dir -r requirements_init.txt
+
+# Exécuter le script d'initialisation
+CMD ["python", "initialize.py"]

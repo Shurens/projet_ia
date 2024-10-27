@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:latest
+    container_name: db_films
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: db  
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+  
+  # mlflow:
+  #   image: continuumio/miniconda3
+  #   container_name: mlflow
+  #   volumes:
+  #     - ./mlflow:/mlflow
+  #   ports:
+  #     - "5000:5000"
+  #   working_dir: /mlflow
+  #   command: >
+  #     /bin/bash -c "pip install mlflow mysql-connector-python pymysql &&
+  #                   mlflow server --backend-store-uri mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE} --default-artifact-root /mlflow/artifacts --host 0.0.0.0 --port 5000"
+  
+  fastapi:
+    build:
+      context: ./api  # Chemin vers le dossier contenant le Dockerfile de FastAPI
+      dockerfile: Dockerfile.api
+    container_name: fastapi
+    depends_on:
+      - db
+    ports:
+      - "8081:8081"
+    environment:
+      DATABASE_URL: mysql+pymysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+
+  initialize:
+    build:
+      context: ./api    # Spécifie le dossier contenant le Dockerfile pour l'initialisation
+      dockerfile: Dockerfile.init    # Spécifie quel Dockerfile utiliser
+    container_name: init_service
+    depends_on:
+      - db
+      - fastapi
+    restart: "no"  # Ce service ne redémarre pas, il s'exécute une seule fois
+
