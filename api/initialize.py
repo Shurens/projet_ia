@@ -37,11 +37,11 @@ class DatabaseInitializer(Connexion):
             cls.deconnexion()
     
     @classmethod
-    def insert_film_data(cls, csv_file='./data.csv'):
+    def insert_film_data(cls, csv_file='data.csv'):
         """Méthode pour insérer la data des films dans la table films"""
         try:
             cls.connexion()  
-            data = pd.read_csv(csv_file)
+            data = pd.read_csv(os.path.join(os.getcwd(), csv_file))
             print(f"{len(data)} lignes lues à partir du fichier CSV.")
 
             for index, row in data.iterrows():

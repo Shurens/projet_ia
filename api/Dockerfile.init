@@ -5,6 +5,7 @@ FROM python:3.10
 WORKDIR /initialisation
 
 # Copier les fichiers nécessaires
+COPY .env ./
 COPY requirements_init.txt ./
 COPY initialize.py ./
 COPY data.csv ./

@@ -1,9 +1,30 @@
 import uvicorn
+import time
+import psutil
+from prometheus_client import Summary, Counter, Gauge, generate_latest, Histogram
+from starlette.responses import Response
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from dto.requetes_bdd import Data
 from dto.auth import login, Token, oauth2_scheme
 from model.random_forest import Prediction
+
+
+# Instanciation des métriques
+REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
+INFERENCES = Counter('model_inferences_total', 'Total number of inferences made')
+LATENCY = Gauge('model_latency_seconds', 'Model latency in seconds')
+MEMORY_USAGE = Gauge('memory_usage_bytes', 'Memory usage of the model')
+CPU_USAGE = Gauge('cpu_usage_percentage', 'CPU usage percentage')
+
+# Nouveaux Histogram pour suivre les valeurs d'entrée
+INPUT_BUDGET = Histogram('model_input_budget', 'Budget of the film for prediction')
+INPUT_REVENUE = Histogram('model_input_revenue', 'Revenue of the film for prediction')
+INPUT_RUNTIME = Histogram('model_input_runtime', 'Runtime of the film for prediction')
+INPUT_VOTE_COUNT = Histogram('model_input_vote_count', 'Vote count of the film for prediction')
+
+OUTPUT_CATEGORY = Counter('model_output_category_count', 'Number of predictions per category', ['category'])
+
 
 tags = [
     {
@@ -26,6 +47,15 @@ app = FastAPI(
     version="1.0.0",
     openapi_tags=tags
 )
+
+# Helper pour récupérer l'utilisation mémoire et CPU
+def get_memory_usage():
+    process = psutil.Process()
+    return process.memory_info().rss  # Mémoire résidente utilisée par le processus (en bytes)
+
+def get_cpu_usage():
+    return psutil.cpu_percent(interval=None)  # Utilisation CPU en pourcentage
+
 
 @app.get("/all_films", tags=["Films"], description="Récupère tous les films")
 def get_all_films(token: str = Depends(oauth2_scheme)):
@@ -104,6 +134,7 @@ def delete_user(user_id: int, token: str = Depends(oauth2_scheme)):
     raise HTTPException(status_code=404, detail=f"Erreur lors de la suppression de l'utilisateur avec l'ID '{user_id}'.")
 
 @app.post("/predict", tags=["Prediction"], description="Prédire la catégorie d'un film")
+@REQUEST_TIME.time()  # Mesurer le temps de traitement
 def predict_film_category(budget: int, revenue: int, runtime: int, vote_count: int, token: str = Depends(oauth2_scheme)):
     """
     Prédire la catégorie d'un film basé sur 4 données.    
@@ -115,12 +146,43 @@ def predict_film_category(budget: int, revenue: int, runtime: int, vote_count: i
     Returns:
         dict: La catégorie prédite pour le film.
     """
-    # Les données à prédire doivent être fournies sous forme de liste [budget, revenue, runtime, vote_count]
+    start_time = time.time()
+    
+    # Enregistrer les valeurs d'entrée dans les Histogram
+    INPUT_BUDGET.observe(budget)          # Observe la valeur du budget
+    INPUT_REVENUE.observe(revenue)        # Observe la valeur du revenu
+    INPUT_RUNTIME.observe(runtime)        # Observe la valeur de la durée
+    INPUT_VOTE_COUNT.observe(vote_count)  # Observe le nombre de votes
+
+    # Suivre les métriques existantes
+    INFERENCES.inc()  # Incrémenter le nombre d'inférences
+    MEMORY_USAGE.set(get_memory_usage())  # Suivre la mémoire utilisée par le modèle
+    CPU_USAGE.set(get_cpu_usage())  # Suivre l'utilisation du CPU
+
+    # Préparer les données
     data = [budget, revenue, runtime, vote_count]
-    prediction = Prediction.predict(data)    
+
+    # Faire une prédiction
+    prediction = Prediction.predict(data)
+
+    # Si erreur dans la prédiction, lever une exception HTTP
     if "Erreur" in prediction:
         raise HTTPException(status_code=400, detail=prediction)
-    return prediction  
+
+    # Si erreur dans la prédiction, lever une exception HTTP
+    if isinstance(prediction, str):  # Vérifier si la prédiction est une chaîne
+        category = prediction  # Utiliser directement la chaîne retournée
+    else:
+        raise HTTPException(status_code=400, detail="Erreur dans la prédiction.")
+
+    # Calcul de la latence
+    LATENCY.set(time.time() - start_time)
+
+    # Enregistrer la métrique de la catégorie prédite
+    OUTPUT_CATEGORY.labels(category).inc()
+
+    return prediction
+
 
 @app.post("/token", response_model=Token)
 def token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -134,6 +196,14 @@ def token(form_data: OAuth2PasswordRequestForm = Depends()):
     if not token_data:
         raise HTTPException(status_code=401, detail="Nom d'utilisateur ou mot de passe incorrect")
     return token_data
+
+@app.get("/metrics")
+def metrics():
+    """
+    Expose les métriques pour Prometheus.
+    """
+    return Response(content=generate_latest(), media_type="text/plain")
+
 
 if __name__ == "__main__" :
     uvicorn.run(app, host="localhost", port=8081)

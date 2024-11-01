@@ -21,27 +21,26 @@ def test_get_film_by_id():
     else:
         assert json_response["message"] == "Film non trouvé"
 
-# def test_toggle_user_role():
-#     response = client.put("/user/toggle_category/2", headers={"Authorization": "Bearer testtoken"})
-#     assert response.status_code == 200
-#     json_response = response.json()
-#     if "message" in json_response:
-#         assert "succès" in json_response["message"] or "non trouvé" in json_response["message"]
+def test_toggle_user_role():
+    response = client.put("/user/toggle_category/2", headers={"Authorization": "Bearer testtoken"})
+    assert response.status_code == 200
+    json_response = response.json()
+    if "message" in json_response:
+        assert "succès" in json_response["message"] or "non trouvé" in json_response["message"]
 
 def test_create_user():
     response = client.post("/user/create_user", params={"username": "testuser", "password": "testpassword"}, headers={"Authorization": "Bearer testtoken"})
-    print("ouioui:", response.json())
     assert response.status_code == 200
     json_response = response.json()
     assert "message" in json_response
     assert "créé avec succès" in json_response["message"] or "existe déjà" in json_response["message"]
 
-# def test_delete_user():
-#     response = client.delete("/user/delete_user/2", headers={"Authorization": "Bearer testtoken"})
-#     assert response.status_code == 200
-#     json_response = response.json()
-#     assert "message" in json_response
-#     assert "supprimé avec succès" in json_response["message"] or "Erreur" in json_response["message"]
+def test_delete_user():
+    response = client.delete("/user/delete_user/2", headers={"Authorization": "Bearer testtoken"})
+    assert response.status_code == 200
+    json_response = response.json()
+    assert "message" in json_response
+    assert "supprimé avec succès" in json_response["message"] or "Erreur" in json_response["message"]
 
 def test_predict_film_category():
     response = client.post("/predict", params={"budget": 1000000, "revenue": 5000000, "runtime": 120, "vote_count": 1000}, headers={"Authorization": "Bearer testtoken"})

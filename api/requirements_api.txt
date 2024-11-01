@@ -9,4 +9,6 @@ mysql-connector-python
 python-dotenv
 joblib
 mlflow
-python-multipart
+prometheus-client
+psutil
+python-multipart==0.0.12
