@@ -34,15 +34,10 @@ jobs:
           echo "USER_PASSWORD=${{ secrets.USER_PASSWORD }}" >> api/.env
 
       - name: Set up Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+        uses: docker/setup-buildx-action@v2  # Installer Docker Buildx
 
-      - name: Install Docker Compose
-        run: |
-          sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          docker-compose --version  # Vérifier l'installation de Docker Compose
+      - name: Set up Docker Compose
+        uses: docker/compose-action@v2  # Installer Docker Compose
 
       - name: Run Docker Compose
         run: |
