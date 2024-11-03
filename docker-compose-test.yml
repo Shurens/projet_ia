@@ -61,7 +61,7 @@ services:
     networks:
         - projet
 
-  initialize:
+  init_service:
     build:
       context: ./api
       dockerfile: Dockerfile.init
