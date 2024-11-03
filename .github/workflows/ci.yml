@@ -41,6 +41,7 @@ jobs:
           echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> api/dto/.env
 
       - name: Creation du .env pour Dagshub
+        run: |
           echo "DAGSHUB_TOKEN=${{ secrets.DAGSHUB_TOKEN }}" >> api/classifier/.env
 
       - name: Set up Docker
