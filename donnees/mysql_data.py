@@ -17,9 +17,6 @@ class Data_mysql:
             print(f"Une erreur s'est produite lors de la récupération des données: {e}")
             films_list = []
         finally:
-            # Fermer le curseur et la connexion
-            if self.mysql.cursor:
-                self.mysql.cursor.close()  # Fermeture du curseur
             self.mysql.deconnexion()      # Fermeture de la connexion
 
         return films_list

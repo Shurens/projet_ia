@@ -1,0 +1,10 @@
+pandas
+python-dotenv
+fastapi
+uvicorn
+python-jose
+passlib
+pydantic
+bcrypt
+python-multipart==0.0.12
+mysql-connector-python

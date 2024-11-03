@@ -1,0 +1,15 @@
+pandas
+fastapi
+uvicorn
+python-jose
+passlib
+pydantic
+bcrypt
+mysql-connector-python
+python-dotenv
+joblib
+mlflow
+prometheus-client
+psutil
+python-multipart==0.0.12
+dagshub
