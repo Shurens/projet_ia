@@ -183,6 +183,18 @@ def predict_film_category(budget: int, revenue: int, runtime: int, vote_count: i
 
     return prediction
 
+@app.get("/test_model", tags=["Prediction"], description="Tester le modèle de prédiction")
+def test_model(token: str = Depends(oauth2_scheme)):
+    """
+    Tester le modèle de prédiction avec des données de test.
+    Cette route nécessite un token d'authentification valide.
+    Returns:
+        str: Un message indiquant le succès ou l'échec du test du modèle.
+    """
+    result = Prediction.test_model()
+    if "Erreur" in result or "Failure" in result:
+        raise HTTPException(status_code=500, detail=result)
+    return {"message": result}
 
 @app.post("/token", response_model=Token)
 def token(form_data: OAuth2PasswordRequestForm = Depends()):

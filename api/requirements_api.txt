@@ -12,3 +12,4 @@ mlflow
 prometheus-client
 psutil
 python-multipart==0.0.12
+dagshub

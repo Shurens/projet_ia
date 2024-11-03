@@ -2,7 +2,7 @@ import sys
 import os
 from fastapi.testclient import TestClient
 import pytest
-# Ajoutez ce qui suit pour définir le chemin vers le dossier racine de votre projet
+# Chemin vers le dossier racine du projet
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/api')
 from api.app import app
 client = TestClient(app)
@@ -48,9 +48,17 @@ def test_predict_film_category():
     json_response = response.json()
     assert "message" not in json_response or "Erreur" not in json_response["message"]
 
+def test_test_model():
+    response = client.get("/test_model", headers={"Authorization": "Bearer testtoken"})
+    assert response.status_code == 200
+    json_response = response.json()
+    assert "message" in json_response
+    assert "Success" in json_response["message"]
+
 def test_token():
     response = client.post("/token", data={"username": "testuser", "password": "testpassword"})
     assert response.status_code == 200
     json_response = response.json()
     assert "access_token" in json_response
     assert json_response["token_type"] == "bearer"
+
