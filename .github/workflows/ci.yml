@@ -27,11 +27,11 @@ jobs:
           echo "GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}" >> .env
 
       - name: Create .env file in the api directory
-          run: |
-            echo "ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}" >> api/.env
-            echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> api/.env
-            echo "USER_USERNAME=${{ secrets.USER_USERNAME }}" >> api/.env
-            echo "USER_PASSWORD=${{ secrets.USER_PASSWORD }}" >> api/.env
+        run: |
+          echo "ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}" >> api/.env
+          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> api/.env
+          echo "USER_USERNAME=${{ secrets.USER_USERNAME }}" >> api/.env
+          echo "USER_PASSWORD=${{ secrets.USER_PASSWORD }}" >> api/.env
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
