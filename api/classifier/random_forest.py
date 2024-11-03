@@ -10,7 +10,7 @@ class Prediction:
         try:
             # Obtenir le chemin absolu du répertoire actuel
             current_dir = os.path.dirname(os.path.abspath(__file__))
-            label_encoder_path = os.path.join(current_dir, "label_encoder_films.joblib")
+            # label_encoder_path = os.path.join(current_dir, "label_encoder_films.joblib")
             model_path = os.path.join(current_dir, "random_forest_model")
 
             # Charger le label encoder et le modèle
