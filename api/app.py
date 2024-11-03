@@ -7,7 +7,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from dto.requetes_bdd import Data
 from dto.auth import login, Token, oauth2_scheme
-from model.random_forest import Prediction
+from classifier.random_forest import Prediction
 
 
 # Instanciation des métriques

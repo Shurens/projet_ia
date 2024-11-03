@@ -75,6 +75,16 @@ services:
     networks:
         - projet
 
+  test_runner:
+      build:
+        context: .
+        dockerfile: Dockerfile.test
+      container_name: test_runner
+      depends_on:
+        - initialize
+      networks:
+        - projet
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus

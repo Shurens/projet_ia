@@ -1,0 +1,18 @@
+# Utiliser une image Python comme base
+FROM python:3.10
+
+# Définir le répertoire de travail dans le conteneur
+WORKDIR /tests
+
+# Copier les fichiers nécessaires dans le conteneur
+COPY requirements_tests.txt ./
+# Copy the test file and the api folder into the container
+COPY test_app.py ./
+COPY api/ ./api/  
+
+
+# Installer les dépendances pour les tests
+RUN pip install --no-cache-dir -r requirements_tests.txt
+
+# Commande par défaut pour exécuter les tests
+CMD ["sh", "-c", "sleep 15 && pytest test_app.py --maxfail=5 --disable-warnings -q"]
