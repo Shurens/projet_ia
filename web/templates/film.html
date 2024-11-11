@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<a href="{{ url_for('home') }}" class="btn btn-primary mt-3">Retour à l'accueil</a>
+    <div class="container mt-4">
+        <h2>{{ film['f_original_title'] }}</h2>        
+        <div class="row">
+            <div class="col-md-8">
+                <p><strong>Titre original :</strong> {{ film['f_original_title'] }}</p>
+                <p><strong>Durée :</strong> {{ film['f_runtime'] }} minutes</p>
+                <p><strong>Budget :</strong> ${{ film['f_budget'] }}</p>
+                <p><strong>Revenue :</strong> ${{ film['f_revenue'] }}</p>
+                <p><strong>Catégorie :</strong> {{ film['f_evaluation'] }}</p>
+            </div>
+        </div>
+        <!-- Afficher les commentaires -->
+        <h3>Commentaires :</h3>
+        {% if comments %}
+            <ul class="list-group">
+                {% for comment in comments %}
+                    <li class="list-group-item">
+                        <strong>{{ comment.u_user }}</strong> <em>({{ comment.c_date }})</em>
+                        <p>{{ comment.c_comment }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Aucun commentaire pour ce film.</p>
+        {% endif %}       
+    </div>
+    <form method="POST" action="{{ url_for('get_film', film_id=film.f_id) }}">
+        <div class="form-group">
+            <label for="comment">Votre commentaire</label>
+            <textarea id="comment" name="comment" class="form-control" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Ajouter un commentaire</button>
+    </form>
+    
+
+{% endblock %}

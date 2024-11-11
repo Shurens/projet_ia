@@ -14,7 +14,7 @@ class Data(Connexion):
         except Exception as e:
             print(f"Erreur lors de la récupération des données : {e}")
         finally:
-            cls.connexion()
+            cls.deconnexion()
 
     @classmethod
     def get_all_films(cls):
@@ -27,7 +27,20 @@ class Data(Connexion):
         except Exception as e:
             print(f"Erreur lors de la récupération des données : {e}")
         finally:
+            cls.deconnexion()
+
+    @classmethod
+    def search_films_by_title(cls, letters: str):
+        try:
             cls.connexion()
+            query = "SELECT f_id, f_original_title FROM films WHERE f_original_title LIKE %s LIMIT 10"
+            cls.cursor.execute(query, ('%' + letters + '%',))
+            films = cls.cursor.fetchall()  # Récupère jusqu'à 10 titres correspondant
+            return films
+        except Exception as e:
+            print(f"Erreur lors de la recherche des films : {e}")
+        finally:
+            cls.deconnexion()
 
     @classmethod
     def get_user_by_username(cls, username: str):
@@ -132,3 +145,41 @@ class Data(Connexion):
         finally:
             cls.deconnexion()
 
+    @classmethod
+    def create_comment(cls, user_id: int, film_id: int, comment: str):
+        try:
+            cls.connexion()
+            query = "INSERT INTO commentaires (c_user_id, c_film_id, c_comment) VALUES (%s, %s, %s)"
+            cls.cursor.execute(query, (user_id, film_id, comment))
+            cls.bdd.commit()
+            return "success"  # Commentaire créé avec succès
+        except Exception as e:
+            return "error"  # Erreur générale lors de la création
+        finally:
+            cls.deconnexion()
+
+    @classmethod
+    def get_comments_by_film_id(cls, film_id: int):
+        try:
+            cls.connexion()
+            query = "SELECT u_user, c_comment, c_date FROM commentaires JOIN users ON u_id = c_user_id WHERE c_film_id = %s"
+            cls.cursor.execute(query, (film_id,))
+            comments = cls.cursor.fetchall()
+            return comments
+        except Exception as e:
+            print(f"Erreur lors de la récupération des commentaires : {e}")
+        finally:
+            cls.deconnexion()
+
+    @classmethod
+    def get_latest_comments(cls):
+        try:
+            cls.connexion()
+            query = "SELECT u_user, f_original_title, c_comment, c_date FROM commentaires JOIN users ON u_id = c_user_id JOIN films ON f_id = c_film_id ORDER BY c_date DESC LIMIT 5"
+            cls.cursor.execute(query)
+            comments = cls.cursor.fetchall()
+            return comments
+        except Exception as e:
+            print(f"Erreur lors de la récupération des commentaires : {e}")
+        finally:
+            cls.deconnexion()

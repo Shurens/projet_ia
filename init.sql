@@ -15,3 +15,12 @@ CREATE TABLE IF NOT EXISTS users (
   u_category varchar(250) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS commentaires (
+    c_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,  
+    c_film_id INT NOT NULL,                        
+    c_user_id INT NOT NULL,                        
+    c_comment TEXT NOT NULL,                       
+    c_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,    
+    FOREIGN KEY (c_film_id) REFERENCES films(f_id),   
+    FOREIGN KEY (c_user_id) REFERENCES users(u_id)    
+);
