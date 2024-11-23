@@ -2,6 +2,7 @@ import sys
 import os
 from fastapi.testclient import TestClient
 import pytest
+
 # Chemin vers le dossier racine du projet
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/api')
 from api.app import app
@@ -29,7 +30,7 @@ def test_toggle_user_role():
         assert "succès" in json_response["message"] or "non trouvé" in json_response["message"]
 
 def test_create_user():
-    response = client.post("/user/create_user", params={"username": "testuser", "password": "testpassword"}, headers={"Authorization": "Bearer testtoken"})
+    response = client.post("/user/create_user", params={"username": "testuser", "password": "testpassword"})
     assert response.status_code == 200
     json_response = response.json()
     assert "message" in json_response
@@ -61,4 +62,30 @@ def test_token():
     json_response = response.json()
     assert "access_token" in json_response
     assert json_response["token_type"] == "bearer"
+    
+def test_search_film_by_letters():
+    response = client.get("/search_films", params={"letters": "Spot"}, headers={"Authorization": "Bearer testtoken"})
+    assert response.status_code == 200
+    json_response = response.json()
+    assert isinstance(json_response, list)
+    if json_response:
+        assert "f_original_title" in json_response[1]
 
+def test_create_comment():
+    response = client.post("/comments/create_comment", params={"user_id": 1, "film_id": 1, "comment": "Bon film !"}, headers={"Authorization": "Bearer testtoken"})
+    assert response.status_code == 200
+    json_response = response.json()
+    assert "message" in json_response
+    assert "créé avec succès" in json_response["message"]
+
+def test_get_comments_by_film_id():
+    response = client.get("/comments/get_comments_by_film_id/1", headers={"Authorization": "Bearer testtoken"})
+    assert response.status_code == 200
+    json_response = response.json()
+    assert isinstance(json_response, list)
+    if json_response:
+        assert "c_comment" in json_response[0]
+
+def test_get_latest_comments():
+    response = client.get("/comments/get_latest_comments", headers={"Authorization": "Bearer testtoken"})
+    assert response.status_code == 200

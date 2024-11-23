@@ -44,27 +44,27 @@ class Prediction:
             logged_model = 'runs:/36c90fa6113740db849a015d17c5d43c/random_forest_model'
             loaded_model = mlflow.pyfunc.load_model(logged_model)
 
-            # Load the test data from CSV 
+            # Charge les data de test du CSV 
             current_dir = os.path.dirname(os.path.abspath(__file__))
             test_data_path = os.path.join(current_dir, "test_data.csv")
             test_data = pd.read_csv(test_data_path)
 
-            # Prepare the features for prediction
+            # Sépare les features des labels
             X_test = test_data[["f_budget", "f_revenue", "f_runtime", "f_vote_count"]]
 
-            # Make predictions
+            # Prédire les labels
             predictions_numeric = loaded_model.predict(X_test)
 
-            # Convert numeric predictions to labels
+            # Convertir les labels numériques en labels textuels
             predictions_label = label_encoder.inverse_transform(predictions_numeric.astype(int))
 
-            # Add the predictions to the DataFrame for comparison
+            # Ajouter les prédictions au DataFrame de test
             test_data['predicted_evaluation'] = predictions_label
 
-            # Check how many predictions match the actual values
+            # Compter le nombre de prédictions correct
             correct_predictions = (test_data['predicted_evaluation'] == test_data['f_evaluation']).sum()
 
-            # Validate the model with a threshold of 7 correct answers
+            # Valide le modèle si au moins 7 prédictions sont correctes
             if correct_predictions >= 7:
                 return f"Success : {correct_predictions} prédictions correctes"
             else:

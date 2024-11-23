@@ -7,16 +7,16 @@ class Data_mysql:
 
     def get_films_data_mysql(self):
         try:
-            # Exécuter la requête pour récupérer toutes les données de collect_films
+            # Exécute la requête pour récupérer toutes les données de collect_films
             query = "SELECT * FROM collect_films"
             self.mysql.cursor.execute(query)
 
-            # Récupérer les résultats
+            # Récupère les résultats
             films_list = self.mysql.cursor.fetchall()
         except Exception as e:
             print(f"Une erreur s'est produite lors de la récupération des données: {e}")
             films_list = []
         finally:
-            self.mysql.deconnexion()      # Fermeture de la connexion
+            self.mysql.deconnexion()      
 
         return films_list

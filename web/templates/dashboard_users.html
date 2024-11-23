@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Gestion des utilisateurs</h2>
+
+        {% if users and users.users %}
+            <table class="table table-bordered table-striped mt-3">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom d'utilisateur</th>
+                        <th>Catégorie</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users.users %}
+                        <tr id="user-{{ user.u_id }}">
+                            <td>{{ user.u_id }}</td>
+                            <td>{{ user.u_user }}</td>
+                            <td id="role-{{ user.u_id }}">{{ user.u_category }}</td>
+                            <td>
+                                <!-- Bouton pour changer le rôle de l'utilisateur -->
+                                <button class="btn btn-warning btn-sm" onclick="toggleRole('{{ user.u_id }}')">
+                                    Changer en {{ 'admin' if user.u_category == 'user' else 'user' }}
+                                </button>
+
+                                <!-- Bouton pour supprimer l'utilisateur -->
+                                <button class="btn btn-danger btn-sm" onclick="deleteUser('{{ user.u_id }}')">
+                                    Supprimer
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Aucun utilisateur trouvé.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        // Fonction pour changer le rôle d'un utilisateur
+        function toggleRole(userId) {
+            const accessToken = "{{ session['access_token'] }}";
+            const apiUrl = `{{ API_URL }}/user/toggle_category/${userId}/`;
+
+            fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.detail) {
+                    alert(data.detail);
+                } else {
+                    // Mise à jour du rôle dans la table sans recharger la page
+                    const roleCell = document.getElementById(`role-${userId}`);
+                    roleCell.textContent = roleCell.textContent === 'admin' ? 'user' : 'admin';
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Erreur lors du changement de rôle:", error);
+                alert("Erreur lors du changement de rôle de l'utilisateur.");
+            });
+        }
+
+        // Fonction pour supprimer un utilisateur
+        function deleteUser(userId) {
+            const accessToken = "{{ session['access_token'] }}";
+            const API_URL = "{{ API_URL }}"
+
+            const apiUrl = `{{ API_URL }}/user/delete_user/${userId}`;
+            
+            if (confirm("Voulez-vous vraiment supprimer cet utilisateur ?")) {
+                fetch(apiUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.detail) {
+                        alert(data.detail);
+                    } else {
+                        // Supprimer la ligne de l'utilisateur de la table
+                        document.getElementById(`user-${userId}`).remove();
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Erreur lors de la suppression de l'utilisateur:", error);
+                    alert("Erreur lors de la suppression de l'utilisateur.");
+                });
+            }
+        }
+    </script>
+{% endblock %}

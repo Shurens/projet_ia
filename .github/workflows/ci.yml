@@ -39,11 +39,17 @@ jobs:
           echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> api/dto/.env
           echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> api/dto/.env
           echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> api/dto/.env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> api/dto/.env
 
       - name: Creation du .env pour Dagshub
         run: |
           echo "DAGSHUB_TOKEN=${{ secrets.DAGSHUB_TOKEN }}" >> api/classifier/.env
 
+      - name: Création du .env pour le flask
+        run: |
+          echo "API_URL=${{ secrets.API_URL }}" >> web/.env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> web/.env
+          
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2  
 

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="text-center">
+        <h1>Bienvenue, {{ username }} !</h1>
+
+        <!-- Barre de recherche avec autocomplétion -->
+        <div class="search-container mt-4">
+            <input type="text" id="film-search" class="form-control" placeholder="Rechercher un film...">
+            <div id="suggestions" class="list-group mt-2"></div>
+        </div>
+    </div>
+
+    <div class="container mt-5">
+        <h3>Derniers commentaires :</h3>
+        {% if comments %}
+            <ul class="list-group">
+                {% for comment in comments %}
+                    <li class="list-group-item">
+                        <strong>{{ comment.u_user }}</strong> sur <em>{{ comment.f_original_title }}</em>:
+                        <p>{{ comment.c_comment }}</p>
+                        <small><em>Le {{ comment.c_date }}</em></small>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Aucun commentaire récent.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        document.getElementById('film-search').addEventListener('input', function() {
+            const query = this.value;
+    
+            // Lancer la requête si l'utilisateur a saisi au moins 3 caractères
+            if (query.length >= 3) {
+                // Récupérer le token d'accès depuis la session
+                const accessToken = "{{ session['access_token'] }}"; // Flask insère automatiquement la variable session['access_token'] ici
+                const API_URL = "{{ API_URL }}"
+                // Effectuer la requête avec le token d'accès
+                fetch(`${API_URL}/search_films?letters=${query}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}` // Ajout du token dans l'en-tête
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                    console.log(data); // Affiche les données dans la console pour inspecter leur structure
+                    const suggestions = document.getElementById('suggestions');
+                    suggestions.innerHTML = ''; // Vider les suggestions précédentes
+
+                    // Si des films sont trouvés, les afficher dans la liste
+                    if (data.length > 0) {
+                        data.forEach(film => {
+                            const suggestionItem = document.createElement('a');
+                            suggestionItem.href = `/film/${film.f_id}`; // Lien vers la page de détails
+                            suggestionItem.className = 'list-group-item list-group-item-action';
+                            suggestionItem.textContent = film.f_original_title; // Titre du film
+                            suggestions.appendChild(suggestionItem);
+                        });
+                    } else {
+                        // Si aucun film trouvé, afficher un message "Aucune suggestion"
+                        const noResultsItem = document.createElement('div');
+                        noResultsItem.className = 'list-group-item';
+                        noResultsItem.textContent = 'Aucune suggestion trouvée';
+                        suggestions.appendChild(noResultsItem);
+                    }
+                })
+                    .catch(error => console.error("Erreur lors de la récupération des suggestions :", error));
+            } else {
+                document.getElementById('suggestions').innerHTML = ''; // Vider les suggestions si moins de 3 caractères
+            }
+        });
+    </script>
+
+{% endblock %}

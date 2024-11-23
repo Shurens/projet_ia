@@ -5,8 +5,8 @@ scrape_configs:
   - job_name: 'fastapi'
     metrics_path: '/metrics'  # Endpoint où Prometheus collecte les métriques
     static_configs:
-      - targets: ['fastapi:8081']  # Le service FastAPI doit être accessible ici
+      - targets: ['fastapi:8081']  
 
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['localhost:9090']  # Collecte des métriques de Prometheus lui-même
+      - targets: ['localhost:9090'] 

@@ -6,24 +6,17 @@ from starlette.responses import Response
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from dto.requetes_bdd import Data
-from dto.auth import login, Token, oauth2_scheme
+from dto.auth import login, refresh_access_token, Token, oauth2_scheme
 from classifier.random_forest import Prediction
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # Instanciation des métriques
-REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
-INFERENCES = Counter('model_inferences_total', 'Total number of inferences made')
-LATENCY = Gauge('model_latency_seconds', 'Model latency in seconds')
-MEMORY_USAGE = Gauge('memory_usage_bytes', 'Memory usage of the model')
-CPU_USAGE = Gauge('cpu_usage_percentage', 'CPU usage percentage')
+REQUEST_TIME = Summary('request_processing_seconds', 'Temps passé à traiter les requêtes')
+INFERENCES = Counter('model_inferences_total', 'Nombre total d\'inférences effectuées')
+LATENCY = Gauge('model_latency_seconds', 'Latence du model en secondes')
 
-# Nouveaux Histogram pour suivre les valeurs d'entrée
-INPUT_BUDGET = Histogram('model_input_budget', 'Budget of the film for prediction')
-INPUT_REVENUE = Histogram('model_input_revenue', 'Revenue of the film for prediction')
-INPUT_RUNTIME = Histogram('model_input_runtime', 'Runtime of the film for prediction')
-INPUT_VOTE_COUNT = Histogram('model_input_vote_count', 'Vote count of the film for prediction')
-
-OUTPUT_CATEGORY = Counter('model_output_category_count', 'Number of predictions per category', ['category'])
+OUTPUT_CATEGORY = Counter('model_output_category_count', 'Nombre de prédiction par catégorie', ['category'])
 
 
 tags = [
@@ -38,6 +31,14 @@ tags = [
     {
         "name": "Prediction",
         "description": "Prédiction de la catégorie d'un film"
+    },
+    {
+        "name": "Commentaires",
+        "description": "Requêtes sur la table 'commentaires'"
+    },
+    {
+        "name": "Monitoring",
+        "description": "Métriques pour Prometheus"
     }
 ]
 
@@ -46,6 +47,18 @@ app = FastAPI(
     description="API de l'application de prédiction de notes de films",
     version="1.0.0",
     openapi_tags=tags
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://127.0.0.1:5000",      
+        "http://localhost:5000",      
+        "http://host.docker.internal:5000"  # Accès depuis un conteneur
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],  # Autorise toutes les méthodes HTTP
+    allow_headers=["*"],  # Autorise toutes les en-têtes
 )
 
 # Helper pour récupérer l'utilisation mémoire et CPU
@@ -85,6 +98,34 @@ def get_film_by_id(film_id: int, token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=404, detail="Film non trouvé")
     return {"film": film}
 
+@app.get("/search_films", tags=["Films"], description="Recherche de films par titre")
+def search_film_by_letters(letters: str, token: str = Depends(oauth2_scheme)):
+    """
+    Recherche des films dont le titre correspond à la requête.
+    Cette route nécessite un token d'authentification valide.
+    Args:
+        letters (str): Les premières lettres du titre du film.
+    Returns:
+        list: Une liste de films correspondant à la requête.
+    """
+    films = Data.search_films_by_title(letters)
+    if not films:
+        raise HTTPException(status_code=404, detail=f"Aucun film trouvé {letters}")
+    return films
+
+@app.get("/user/get_all_users", tags=["Users"], description="Récupère tous les utilisateurs")
+def get_all_users(token: str = Depends(oauth2_scheme)):
+    """
+    Récupère tous les utilisateurs de la base de données.
+    Cette route nécessite un token d'authentification valide.
+    Returns:
+        dict: Un dictionnaire avec tous les utilisateurs.
+    """
+    users = Data.get_all_users()
+    if not users:
+        raise HTTPException(status_code=404, detail="Aucun utilisateur trouvé.")
+    return {"users": users}
+
 @app.put("/user/toggle_category/{user_id}/", tags=["Users"], description="Change le rôle d'un utilisateur")
 def toggle_user_role(user_id: int, token: str = Depends(oauth2_scheme)):  
     """
@@ -101,7 +142,7 @@ def toggle_user_role(user_id: int, token: str = Depends(oauth2_scheme)):
     raise HTTPException(status_code=404, detail=f"Utilisateur avec l'ID '{user_id}' non trouvé.")
     
 @app.post("/user/create_user", tags=["Users"], description="Crée un utilisateur")
-def create_user(username: str, password: str, token: str = Depends(oauth2_scheme)):
+def create_user(username: str, password: str):
     """
     Crée un nouvel utilisateur avec un nom d'utilisateur et un mot de passe haché.
     Cette route nécessite un token d'authentification valide.
@@ -133,6 +174,50 @@ def delete_user(user_id: int, token: str = Depends(oauth2_scheme)):
         return {"message": f"Utilisateur avec l'ID '{user_id}' supprimé avec succès."}
     raise HTTPException(status_code=404, detail=f"Erreur lors de la suppression de l'utilisateur avec l'ID '{user_id}'.")
 
+@app.post("/comments/create_comment", tags=["Commentaires"], description="Crée un commentaire pour un film")
+def create_comment(user_id: int, film_id: int, comment: str, token: str = Depends(oauth2_scheme)):
+    """
+    Crée un commentaire pour un film donné.
+    Args:
+        user_id (int): L'ID de l'utilisateur qui a laissé le commentaire.
+        film_id (int): L'ID du film pour lequel le commentaire est laissé.
+        comment (str): Le texte du commentaire.
+    Returns:
+        dict: Un message indiquant si le commentaire a été créé avec succès ou non.
+    """
+    result = Data.create_comment(user_id, film_id, comment)
+    if result == "success":
+        return {"message": "Commentaire créé avec succès."}
+    raise HTTPException(status_code=500, detail="Erreur lors de la création du commentaire.")
+
+@app.get("/comments/get_comments_by_film_id/{film_id}", tags=["Commentaires"], description="Récupère les commentaires pour un film")
+def get_comments_by_film_id(film_id: int, token: str = Depends(oauth2_scheme)):
+    """
+    Récupère les commentaires laissés pour un film donné.
+    Args:
+        film_id (int): L'ID du film pour lequel les commentaires sont récupérés.
+    Returns:
+        dict: Une liste de commentaires pour le film donné.
+    """
+    comments = Data.get_comments_by_film_id(film_id)
+    if not comments:
+        raise HTTPException(status_code=404, detail=f"Aucun commentaire trouvé pour le film avec l'ID '{film_id}'.")
+    return comments
+
+
+@app.get("/comments/get_latest_comments", tags=["Commentaires"], description="Récupère les derniers commentaires")
+def get_latest_comments(token: str = Depends(oauth2_scheme)):
+    """
+    Récupère les derniers commentaires laissés pour tous les films.
+    Cette route nécessite un token d'authentification valide.
+    Returns:
+        dict: Une liste des derniers commentaires pour chaque film.
+    """
+    comments = Data.get_latest_comments()
+    if not comments:
+        raise HTTPException(status_code=404, detail="Aucun commentaire trouvé.")
+    return comments
+
 @app.post("/predict", tags=["Prediction"], description="Prédire la catégorie d'un film")
 @REQUEST_TIME.time()  # Mesurer le temps de traitement
 def predict_film_category(budget: int, revenue: int, runtime: int, vote_count: int, token: str = Depends(oauth2_scheme)):
@@ -148,16 +233,9 @@ def predict_film_category(budget: int, revenue: int, runtime: int, vote_count: i
     """
     start_time = time.time()
     
-    # Enregistrer les valeurs d'entrée dans les Histogram
-    INPUT_BUDGET.observe(budget)          # Observe la valeur du budget
-    INPUT_REVENUE.observe(revenue)        # Observe la valeur du revenu
-    INPUT_RUNTIME.observe(runtime)        # Observe la valeur de la durée
-    INPUT_VOTE_COUNT.observe(vote_count)  # Observe le nombre de votes
 
     # Suivre les métriques existantes
     INFERENCES.inc()  # Incrémenter le nombre d'inférences
-    MEMORY_USAGE.set(get_memory_usage())  # Suivre la mémoire utilisée par le modèle
-    CPU_USAGE.set(get_cpu_usage())  # Suivre l'utilisation du CPU
 
     # Préparer les données
     data = [budget, revenue, runtime, vote_count]
@@ -209,7 +287,16 @@ def token(form_data: OAuth2PasswordRequestForm = Depends()):
         raise HTTPException(status_code=401, detail="Nom d'utilisateur ou mot de passe incorrect")
     return token_data
 
-@app.get("/metrics")
+@app.post("/refresh_token", description="Rafraîchit le token d'authentification")
+def refresh_token(token: str = Depends(oauth2_scheme)):
+    """
+    Rafraîchir un token d'authentification en prolongeant sa durée de vie.
+    Cette route nécessite un token d'authentification valide.
+    """
+    return refresh_access_token(token)
+
+
+@app.get("/metrics", tags=["Monitoring"], description="Exposer les métriques pour Prometheus")
 def metrics():
     """
     Expose les métriques pour Prometheus.
