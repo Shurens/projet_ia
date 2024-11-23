@@ -95,7 +95,7 @@ def test_get_latest_comments():
 #                                   Tests Flask                                                          #
 #========================================================================================================#
 
-BASE_URL = "http://flask:5000"
+BASE_URL = "http://host.docker.internal:5000"
 
 def test_login_page():
     """Test si la page de login est accessible."""
