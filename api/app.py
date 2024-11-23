@@ -51,7 +51,11 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5000"],  # Origine autorisée (Flask)
+    allow_origins=[
+        "http://127.0.0.1:5000",      
+        "http://localhost:5000",      
+        "http://host.docker.internal:5000"  # Accès depuis un conteneur
+    ],
     allow_credentials=True,
     allow_methods=["*"],  # Autorise toutes les méthodes HTTP
     allow_headers=["*"],  # Autorise toutes les en-têtes

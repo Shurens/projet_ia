@@ -9,7 +9,7 @@ COPY requirements_tests.txt ./
 # Copy the test file and the api folder into the container
 COPY test_app.py ./
 COPY api/ ./api/  
-
+COPY web/ ./web/
 
 # Installer les dépendances pour les tests
 RUN pip install --no-cache-dir -r requirements_tests.txt

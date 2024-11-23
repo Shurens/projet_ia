@@ -101,6 +101,17 @@ services:
     networks:
         - projet
 
+  flask:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.flask
+    container_name: flask_app
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    networks:
+      - projet
 
 volumes:
   grafana_data:
