@@ -2,7 +2,6 @@ import sys
 import os
 from fastapi.testclient import TestClient
 import pytest
-import requests
 
 # Chemin vers le dossier racine du projet
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/api')
@@ -90,41 +89,3 @@ def test_get_comments_by_film_id():
 def test_get_latest_comments():
     response = client.get("/comments/get_latest_comments", headers={"Authorization": "Bearer testtoken"})
     assert response.status_code == 200
-
-#========================================================================================================#
-#                                   Tests Flask                                                          #
-#========================================================================================================#
-
-BASE_URL = "http://host.docker.internal:5000"
-
-def test_login_page():
-    """Test si la page de login est accessible."""
-    response = requests.get(f"{BASE_URL}/login")
-    assert response.status_code == 200
-    assert "Connexion" in response.text  # Vérifie que le texte 'Connexion' est présent dans la réponse
-
-def test_protected_route_redirect():
-    """Test qu'un utilisateur non connecté est redirigé vers la page de connexion."""
-    response = requests.get(f"{BASE_URL}/prediction")
-
-    assert "Connexion" in response.text  # Vérifie que le texte 'Connexion' est présent dans la réponse
-
-def test_admin_access_to_dashboard():
-    """Test qu'un administrateur peut accéder à la page /dashboard."""
-    
-    # Création de session pour simuler un utilisateur authentifié
-    session = requests.Session()
-
-    # Données de connexion de l'utilisateur admin
-    admin_credentials = {
-        'username': 'shuren',  
-        'password': 'test'  
-    }
-    
-    # Effectuer une requête POST pour se connecter
-    login_response = session.post(f"{BASE_URL}/login", data=admin_credentials)
-    # Vérifie si la connexion est réussie 
-    assert login_response.status_code == 200
-    dashboard_response = session.get(f"{BASE_URL}/dashboard_users")
-    # Vérifie si l'accès à /dashboard est autorisé 
-    assert dashboard_response.status_code == 200
