@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Prédiction de la catégorie d'un film</h2>
+        <form method="POST" action="{{ url_for('prediction') }}">
+            <div class="form-group">
+                <label for="budget">Budget total</label>
+                <input type="number" class="form-control" id="budget" name="budget" required>
+            </div>
+            <div class="form-group">
+                <label for="revenue">Revenue total</label>
+                <input type="number" class="form-control" id="revenue" name="revenue" required>
+            </div>
+            <div class="form-group">
+                <label for="runtime">Durée (en minutes : 1h30 = 90 minutes)</label>
+                <input type="number" class="form-control" id="runtime" name="runtime" required>
+            </div>
+            <div class="form-group">
+                <label for="vote_count">Nombre de votes</label>
+                <input type="number" class="form-control" id="vote_count" name="vote_count" required>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Prédire</button>
+        </form>
+
+        <!-- Affiche le résultat de la prédiction si disponible -->
+        {% if prediction_result %}
+            <div class="alert alert-info mt-4">
+                <strong>Résultat de la prédiction :</strong> {{ prediction_result }}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

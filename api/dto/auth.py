@@ -52,7 +52,7 @@ def get_user(username: str):
     from dto.requetes_bdd import Data
     result = Data.get_user_by_username(username)
     if result:
-        print(f"Hachage du mot de passe : {result['u_pwd']}")  # Débogage
+        print(f"Hachage du mot de passe : {result['u_pwd']}")  
         # Récupérer l'ID de l'utilisateur dans la base de données et le renvoyer avec les autres informations
         return User(id=result['u_id'], username=result['u_user'], hashed_password=result['u_pwd'], role=result['u_category'])
     return None
@@ -61,10 +61,10 @@ def get_user(username: str):
 
 
 def authenticate_user(username: str, password: str):
-    user = get_user(username)  # Récupère l'utilisateur complet
+    user = get_user(username)  
     if not user or not verify_password(password, user.hashed_password):
         return False, None
-    return user  # Retourne l'utilisateur directement
+    return user  
 
 
 
@@ -78,7 +78,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"username": user.username, "role": user.role, "id": user.id},  # Inclure l'ID dans la charge utile
+        data={"username": user.username, "role": user.role, "id": user.id},  
         expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
@@ -87,7 +87,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 # Fonction pour générer un nouveau token à partir des données d'un ancien token
 def refresh_access_token(token: str):
     try:
-        # Décoder l'actuel token
+        # Décoder le token actuel
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("username")
         user_id = payload.get("id")

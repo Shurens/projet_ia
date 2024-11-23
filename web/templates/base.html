@@ -79,12 +79,15 @@
                     <li class="nav-item {% if request.endpoint == 'home' %}active{% endif %}">
                         <a class="nav-link" href="{{ url_for('home') }}">Accueil</a>
                     </li>
-                    <li class="nav-item {% if request.endpoint == 'about' %}active{% endif %}">
-                        <a class="nav-link" href="#">À propos</a>
+                    <li class="nav-item {% if request.endpoint == 'prediction' %}active{% endif %}">
+                        <a class="nav-link" href="{{ url_for('prediction') }}">Prédictions</a>
                     </li>
                     {% if session.get('role') == 'admin' %}
-                    <li class="nav-item {% if request.endpoint == 'contact' %}active{% endif %}">
-                        <a class="nav-link" href="#">Contact (Admin)</a>
+                    <li class="nav-item {% if request.endpoint == 'dashboard_users' %}active{% endif %}">
+                        <a class="nav-link" href="{{ url_for('dashboard_users') }}">Dashboard des Utilisateurs (Admin)</a>
+                    </li>
+                    <li class="nav-item {% if request.endpoint == 'dashboard_metrics' %}active{% endif %}">
+                        <a class="nav-link" href="http://localhost:3000/login" target="_blank">Dashboard des Métriques du modèle (Admin)</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -100,7 +103,7 @@
         {% endblock %}
 
         <!-- Contenu principal -->
-        <div class="container mt-4">
+        <div class="container">
             {% block content %}
             {% endblock %}
         </div>
@@ -110,9 +113,5 @@
             <p><strong>Application pour le projet chef d'oeuvre de fin d'année Simplon</strong></p>
         </footer>
     </div>
-
-    <!-- Scripts -->
-    <!-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script> -->
 </body>
 </html>

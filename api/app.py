@@ -12,19 +12,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 # Instanciation des métriques
-REQUEST_TIME = Summary('request_processing_seconds', 'Time spent processing request')
-INFERENCES = Counter('model_inferences_total', 'Total number of inferences made')
-LATENCY = Gauge('model_latency_seconds', 'Model latency in seconds')
-MEMORY_USAGE = Gauge('memory_usage_bytes', 'Memory usage of the model')
-CPU_USAGE = Gauge('cpu_usage_percentage', 'CPU usage percentage')
+REQUEST_TIME = Summary('request_processing_seconds', 'Temps passé à traiter les requêtes')
+INFERENCES = Counter('model_inferences_total', 'Nombre total d\'inférences effectuées')
+LATENCY = Gauge('model_latency_seconds', 'Latence du model en secondes')
 
-# Nouveaux Histogram pour suivre les valeurs d'entrée
-INPUT_BUDGET = Histogram('model_input_budget', 'Budget of the film for prediction')
-INPUT_REVENUE = Histogram('model_input_revenue', 'Revenue of the film for prediction')
-INPUT_RUNTIME = Histogram('model_input_runtime', 'Runtime of the film for prediction')
-INPUT_VOTE_COUNT = Histogram('model_input_vote_count', 'Vote count of the film for prediction')
-
-OUTPUT_CATEGORY = Counter('model_output_category_count', 'Number of predictions per category', ['category'])
+OUTPUT_CATEGORY = Counter('model_output_category_count', 'Nombre de prédiction par catégorie', ['category'])
 
 
 tags = [
@@ -62,7 +54,7 @@ app.add_middleware(
     allow_origins=["http://127.0.0.1:5000"],  # Origine autorisée (Flask)
     allow_credentials=True,
     allow_methods=["*"],  # Autorise toutes les méthodes HTTP
-    allow_headers=["*"],  # Autorise tous les en-têtes
+    allow_headers=["*"],  # Autorise toutes les en-têtes
 )
 
 # Helper pour récupérer l'utilisation mémoire et CPU
@@ -116,6 +108,19 @@ def search_film_by_letters(letters: str, token: str = Depends(oauth2_scheme)):
     if not films:
         raise HTTPException(status_code=404, detail=f"Aucun film trouvé {letters}")
     return films
+
+@app.get("/user/get_all_users", tags=["Users"], description="Récupère tous les utilisateurs")
+def get_all_users(token: str = Depends(oauth2_scheme)):
+    """
+    Récupère tous les utilisateurs de la base de données.
+    Cette route nécessite un token d'authentification valide.
+    Returns:
+        dict: Un dictionnaire avec tous les utilisateurs.
+    """
+    users = Data.get_all_users()
+    if not users:
+        raise HTTPException(status_code=404, detail="Aucun utilisateur trouvé.")
+    return {"users": users}
 
 @app.put("/user/toggle_category/{user_id}/", tags=["Users"], description="Change le rôle d'un utilisateur")
 def toggle_user_role(user_id: int, token: str = Depends(oauth2_scheme)):  
@@ -224,16 +229,9 @@ def predict_film_category(budget: int, revenue: int, runtime: int, vote_count: i
     """
     start_time = time.time()
     
-    # Enregistrer les valeurs d'entrée dans les Histogram
-    INPUT_BUDGET.observe(budget)          # Observe la valeur du budget
-    INPUT_REVENUE.observe(revenue)        # Observe la valeur du revenu
-    INPUT_RUNTIME.observe(runtime)        # Observe la valeur de la durée
-    INPUT_VOTE_COUNT.observe(vote_count)  # Observe le nombre de votes
 
     # Suivre les métriques existantes
     INFERENCES.inc()  # Incrémenter le nombre d'inférences
-    MEMORY_USAGE.set(get_memory_usage())  # Suivre la mémoire utilisée par le modèle
-    CPU_USAGE.set(get_cpu_usage())  # Suivre l'utilisation du CPU
 
     # Préparer les données
     data = [budget, revenue, runtime, vote_count]

@@ -11,7 +11,14 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY') 
 API_URL = os.getenv('API_URL')
 
-from datetime import datetime, timedelta
+
+def format_date(date_str):
+    # Convertir la chaîne en objet datetime en supposant qu'elle est en UTC
+    utc_date = datetime.fromisoformat(date_str)
+    # Ajuster pour le fuseau horaire (ajout de +1 heure par exemple)
+    local_date = utc_date + timedelta(hours=1)
+    # Formater la date pour un affichage plus lisible
+    return local_date.strftime("%d-%m-%Y %H:%M")
 
 def login_required(f):
     @wraps(f)
@@ -149,6 +156,8 @@ def home():
     
     if comments_response.status_code == 200:
         comments_data = comments_response.json()
+        for comment in comments_data:
+            comment["c_date"] = format_date(comment["c_date"])
     else:
         comments_data = []
 
@@ -169,6 +178,9 @@ def get_film(film_id):
         # Check if the comments response contains actual comments or a detail message
         if comments_response.status_code == 200:
             comments_data = comments_response.json()
+            for comment in comments_data:
+                comment["c_date"] = format_date(comment["c_date"])
+
             # If the API returns a dictionary with "detail", set comments to an empty list
             comments = comments_data if isinstance(comments_data, list) else []
         else:
@@ -178,8 +190,13 @@ def get_film(film_id):
         if request.method == 'POST':
             comment = request.form['comment']
             user_id = session.get('id')
-            create_comment_url = f"{API_URL}/comments/create_comment?user_id={user_id}&film_id={film_id}&comment={comment}"
-            requests.post(create_comment_url, headers={"Authorization": f"Bearer {session['access_token']}"})
+            create_comment_url = f"{API_URL}/comments/create_comment"
+            params = {
+                'user_id': user_id,
+                'film_id': film_id,
+                'comment': comment
+            }
+            requests.post(create_comment_url, headers={"Authorization": f"Bearer {session['access_token']}"}, params=params)
             # Redirect after adding the comment to avoid form resubmission
             return redirect(url_for('get_film', film_id=film_id))
         
@@ -188,11 +205,48 @@ def get_film(film_id):
     
     return "Film non trouvé", 404
 
+@app.route('/prediction', methods=['GET', 'POST'])
+@login_required
+def prediction():
+    if request.method == 'POST':
+        # Récupération des données du formulaire
+        budget = request.form.get('budget', type=int)
+        revenue = request.form.get('revenue', type=int)
+        runtime = request.form.get('runtime', type=int)
+        vote_count = request.form.get('vote_count', type=int)
+        
+        # Préparer les données pour l'API
+        prediction_url = f"{API_URL}/predict"
+        headers = {"Authorization": f"Bearer {session['access_token']}"}
+        params = {
+            "budget": budget,
+            "revenue": revenue,
+            "runtime": runtime,
+            "vote_count": vote_count
+        }
+        
+        # Envoyer la requête à l'API pour obtenir une prédiction
+        response = requests.post(prediction_url, headers=headers, params=params)
+        # Vérifier si la requête a réussi
+        if response.status_code == 200:
+            prediction_result = response.json()
+        else:
+            prediction_result = "Erreur lors de la prédiction"
 
-@app.route('/dashboard')
+        # Rendre la page avec le résultat de la prédiction
+        return render_template('prediction.html', prediction_result=prediction_result)
+
+    # Si méthode GET, afficher le formulaire vide
+    return render_template('prediction.html')
+
+@app.route('/dashboard_users')
 @admin_required
-def dashboard():
-    return "Bienvenue sur le tableau de bord réservé aux administrateurs"
+def dashboard_users():
+    # URL pour récupérer la liste des utilisateurs
+    users_url = f"{API_URL}/user/get_all_users"
+    headers = {"Authorization": f"Bearer {session['access_token']}"}
+    response = requests.get(users_url, headers=headers)
+    return render_template('dashboard_users.html', users=response.json(), API_URL=API_URL)
 
 
 @app.route('/session')

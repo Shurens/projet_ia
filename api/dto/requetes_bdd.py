@@ -90,6 +90,19 @@ class Data(Connexion):
             cls.deconnexion()
 
     @classmethod
+    def get_all_users(cls):
+        try:
+            cls.connexion()
+            query = "SELECT u_id, u_user, u_category FROM users"
+            cls.cursor.execute(query)
+            users = cls.cursor.fetchall()
+            return users
+        except Exception as e:
+            print(f"Erreur lors de la récupération des utilisateurs : {e}")
+        finally:
+            cls.deconnexion()
+
+    @classmethod
     def user_exists(cls, username: str) -> bool:
         try:
             cls.connexion()

@@ -12,7 +12,7 @@ class DatabaseInitializer(Connexion):
             cls.connexion()
             load_dotenv()
 
-            # Create admin user
+            # Creation d'un admin 
             admin_username = os.getenv('ADMIN_USERNAME')
             admin_password = os.getenv('ADMIN_PASSWORD')
             admin_role = 'admin'
@@ -21,7 +21,7 @@ class DatabaseInitializer(Connexion):
             cls.cursor.execute(admin_query, (admin_username, admin_hashed_password, admin_role))
             print(f"Utilisateur '{admin_username}' créé avec succès avec un mot de passe haché.")
             
-            # Create regular user
+            # Creation d'un user
             user_username = os.getenv('USER_USERNAME')
             user_password = os.getenv('USER_PASSWORD')
             user_role = 'user'
