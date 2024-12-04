@@ -1,0 +1,30 @@
+# name: CD
+
+# on:
+#   push: 
+#     branches:
+#       - "main" 
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v2 
+
+#       - name: Setup SSH
+#         uses: webfactory/ssh-agent@v0.9.0 
+#         with:
+#           ssh-private-key:  ${{ secrets.CLE_SSH }}
+
+#       - name: Deploiement de l'app
+#         run: |
+#           ssh -o StrictHostKeyChecking=no user@mon-serveur.com << 'EOF'
+#             cd chemin/vers/le/dossier/de/mon/app
+#             git pull origin main
+#             docker compose down
+#             docker compose up --build -d 
+#           EOF
+
+
