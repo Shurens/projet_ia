@@ -1,0 +1,11 @@
+site_name: Projet chef d'oeuvre
+nav:
+  - Accueil: index.md
+  - Documentation:
+    - 'Requêtes SQL': C2.md
+    - 'Aggrégation des données': C3.md
+    - 'Base de Données': C4.md
+    - 'Monitorage du modèle': C11.md
+    - 'CI': C12.md
+    - 'CD': C13.md
+    - 'Application flask': C17.md

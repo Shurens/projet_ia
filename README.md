@@ -44,7 +44,10 @@ On y trouve ici tout le processus d'entraînement et de benchmarking des modèle
 Ce dossier contient le fichier `prometheus.yml` pour la configuration de Prometheus. Il est utilisé pour monitorer les performances de l'application et les métriques du modèle.  
 
 ### `web/`  
-Le code source de l'application Flask se trouve ici. Ce dossier contient les fichiers nécessaires à la création de l'interface utilisateur qui permet d'interagir avec le modèle.  
+Le code source de l'application Flask se trouve ici. Ce dossier contient les fichiers nécessaires à la création de l'interface utilisateur qui permet d'interagir avec le modèle. 
+
+### `documentations/`   
+Ce dossier contient les documentations des différentes composantes du projet. Elles sont servies avec MkDocs. Pour lire la documentation, il faut se dans ce dossier et exécuter `mkdocs serve`, puis accéder à [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
 
 ---
 
