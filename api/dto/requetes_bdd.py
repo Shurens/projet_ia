@@ -2,6 +2,35 @@ from dto.connection_mysql import Connexion
 from dto.auth import get_password_hash
 
 class Data(Connexion):
+    """
+    Classe Data pour interagir avec la base de données.
+    Méthodes:
+    ---------
+    get_one_film(film_id):
+        Récupère un film par son identifiant.
+    get_all_films():
+        Récupère tous les films avec certaines colonnes spécifiques.
+    search_films_by_title(letters):
+        Recherche des films par titre en utilisant des lettres données.
+    get_user_by_username(username):
+        Récupère un utilisateur par son nom d'utilisateur.
+    toggle_user_category(user_id):
+        Change la catégorie d'un utilisateur entre 'admin' et 'user'.
+    get_all_users():
+        Récupère tous les utilisateurs avec certaines colonnes spécifiques.
+    user_exists(username):
+        Vérifie si un utilisateur existe par son nom d'utilisateur.
+    create_user(username, password):
+        Crée un nouvel utilisateur avec un nom d'utilisateur et un mot de passe.
+    delete_user(user_id):
+        Supprime un utilisateur par son identifiant.
+    create_comment(user_id, film_id, comment):
+        Crée un commentaire pour un film par un utilisateur.
+    get_comments_by_film_id(film_id):
+        Récupère les commentaires d'un film par son identifiant.
+    get_latest_comments():
+        Récupère les derniers commentaires avec des informations sur l'utilisateur et le film.
+    """
 
     @classmethod
     def get_one_film(cls, film_id):
@@ -9,7 +38,7 @@ class Data(Connexion):
             cls.connexion()
             query = "SELECT * FROM films WHERE f_id= %s"
             cls.cursor.execute(query, (film_id,))
-            film = cls.cursor.fetchone() # Récupère un seul film          
+            film = cls.cursor.fetchone()         
             return film
         except Exception as e:
             print(f"Erreur lors de la récupération des données : {e}")
@@ -35,7 +64,7 @@ class Data(Connexion):
             cls.connexion()
             query = "SELECT f_id, f_original_title FROM films WHERE f_original_title LIKE %s LIMIT 10"
             cls.cursor.execute(query, ('%' + letters + '%',))
-            films = cls.cursor.fetchall()  # Récupère jusqu'à 10 titres correspondant
+            films = cls.cursor.fetchall() 
             return films
         except Exception as e:
             print(f"Erreur lors de la recherche des films : {e}")
@@ -58,7 +87,6 @@ class Data(Connexion):
     def toggle_user_category(cls, user_id: int):
         try:
             cls.connexion()
-            # Récupérer le rôle actuel de l'utilisateur via l'ID
             query = "SELECT u_category FROM users WHERE u_id = %s"
             cls.cursor.execute(query, (user_id,))
             result = cls.cursor.fetchone()
@@ -69,7 +97,6 @@ class Data(Connexion):
 
             current_role = result['u_category'] if result else None
 
-            # Déterminer le nouveau rôle
             if current_role == 'admin':
                 new_role = 'user'
             elif current_role == 'user':
@@ -78,7 +105,6 @@ class Data(Connexion):
                 print(f"Le rôle actuel '{current_role}' de l'utilisateur est inconnu.")
                 return {"message": "Rôle inconnu"}
 
-            # Mise à jour du rôle dans la base de données
             update_query = "UPDATE users SET u_category = %s WHERE u_id = %s"
             cls.cursor.execute(update_query, (new_role, user_id))
             print(f"Rôle de l'utilisateur avec l'ID '{user_id}' mis à jour vers '{new_role}'.")
@@ -109,18 +135,16 @@ class Data(Connexion):
             query = "SELECT COUNT(*) AS count FROM users WHERE u_user = %s"
             cls.cursor.execute(query, (username,))
             count = cls.cursor.fetchone()
-            return count['count'] > 0  # Retourne True si un utilisateur existe, False sinon
+            return count['count'] > 0 
         except Exception as e:
-            # En cas d'erreur, on suppose que l'utilisateur n'existe pas
             return False  
         finally:
             cls.deconnexion()
 
     @classmethod
     def create_user(cls, username: str, password: str):
-        # Vérifiez d'abord si l'utilisateur existe déjà
         if cls.user_exists(username):
-            return "user_exists"  # Utilisateur déjà existant
+            return "user_exists" 
 
         try:
             cls.connexion()
@@ -131,9 +155,9 @@ class Data(Connexion):
             query = "INSERT INTO users (u_user, u_pwd, u_category) VALUES (%s, %s, %s)"
             cls.cursor.execute(query, (u_user, hashed_password, u_category))
             cls.bdd.commit()
-            return "success"  # Utilisateur créé avec succès
+            return "success"  
         except Exception as e:
-            return "error"  # Erreur générale lors de la création
+            return "error"  
         finally:
             cls.deconnexion()
 
@@ -145,16 +169,16 @@ class Data(Connexion):
             cls.cursor.execute(query, (user_id,))
             cls.bdd.commit()
 
-            # Vérifiez le nombre de lignes affectées pour déterminer si la suppression a réussi
+            
             if cls.cursor.rowcount > 0:
                 print(f"Utilisateur avec l'ID '{user_id}' supprimé avec succès.")
-                return True  # L'utilisateur a été supprimé
+                return True  
             else:
                 print(f"Aucun utilisateur trouvé avec l'ID '{user_id}'.")
-                return False  # Aucun utilisateur trouvé avec cet ID
+                return False 
         except Exception as e:
             print(f"Erreur lors de la suppression de l'utilisateur : {e}")
-            return False  # En cas d'erreur
+            return False
         finally:
             cls.deconnexion()
 
@@ -165,9 +189,9 @@ class Data(Connexion):
             query = "INSERT INTO commentaires (c_user_id, c_film_id, c_comment) VALUES (%s, %s, %s)"
             cls.cursor.execute(query, (user_id, film_id, comment))
             cls.bdd.commit()
-            return "success"  # Commentaire créé avec succès
+            return "success" 
         except Exception as e:
-            return "error"  # Erreur générale lors de la création
+            return "error"  
         finally:
             cls.deconnexion()
 
